@@ -1,0 +1,10 @@
+{% extends 'layout.html' %}
+{% block title %}Subir archivo{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Análisis Financiero</h1>
+<form method="post" enctype="multipart/form-data" class="bg-white p-6 rounded shadow-md">
+    <label class="block mb-2">Seleccione archivo CSV o Excel</label>
+    <input type="file" name="file" accept=".csv,.xls,.xlsx" class="border p-2 mb-4 w-full" required>
+    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Subir</button>
+</form>
+{% endblock %}

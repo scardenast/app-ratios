@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Resumen Financiero</title>
+<style>
+body { font-family: sans-serif; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #333; padding: 4px; text-align: left; }
+</style>
+</head>
+<body>
+<h1>Resumen de Ratios</h1>
+<table>
+<tr><th>Ratio</th><th>Valor</th></tr>
+{% for key, val in ratios.items() %}
+<tr>
+    <td>{{ key.replace('_', ' ') }}</td>
+    <td>{{ '%.2f'|format(val) if val is not none else 'N/A' }}</td>
+</tr>
+{% endfor %}
+</table>
+</body>
+</html>
