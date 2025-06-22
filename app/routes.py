@@ -3,15 +3,16 @@ import pandas as pd
 from flask import render_template, request, redirect, url_for, send_file
 from . import app
 
-# Thresholds for traffic light indicator
+# Thresholds para los colores tipo semáforo
 THRESHOLDS = {
-    'razon_corriente': [1, 2],  # <1 rojo, 1-2 amarillo, >2 verde
+    'razon_corriente': [1, 2],
     'prueba_acida': [0.8, 1],
     'razon_endeudamiento': [0.5, 0.8],
     'roe': [0.1, 0.2],
     'roa': [0.05, 0.1],
 }
 
+# Recomendaciones automáticas según desempeño
 RECOMMENDATIONS = {
     'razon_corriente': {
         'low': 'Riesgo de iliquidez. Considere reducir pasivos o aumentar caja.',
@@ -26,6 +27,8 @@ RECOMMENDATIONS = {
 
 def get_color(value, thresholds):
     low, high = thresholds
+    if value is None:
+        return 'grey'
     if value < low:
         return 'red'
     if low <= value <= high:
@@ -40,9 +43,7 @@ def compute_ratios(df):
     except Exception:
         ratios['razon_corriente'] = None
     try:
-        ratios['prueba_acida'] = (
-            df['Activo Corriente'].iloc[0] - df['Inventarios'].iloc[0]
-        ) / df['Pasivo Corriente'].iloc[0]
+        ratios['prueba_acida'] = (df['Activo Corriente'].iloc[0] - df['Inventarios'].iloc[0]) / df['Pasivo Corriente'].iloc[0]
     except Exception:
         ratios['prueba_acida'] = None
     try:
@@ -104,6 +105,13 @@ def compute_ratios(df):
     return ratios
 
 
+def convert_ratios(ratios):
+    return {
+        k: float(v) if v is not None and not pd.isna(v) else None
+        for k, v in ratios.items()
+    }
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -114,11 +122,16 @@ def index():
             df = pd.read_csv(file)
         else:
             df = pd.read_excel(file)
-        ratios = compute_ratios(df)
+        df.columns = [col.strip() for col in df.columns]
+
+        raw_ratios = compute_ratios(df)
+        ratios = convert_ratios(raw_ratios)
+
         colors = {
             key: get_color(val, THRESHOLDS.get(key, [0, 0])) if val is not None else 'grey'
             for key, val in ratios.items()
         }
+
         recs = {}
         for key, val in ratios.items():
             thresh = THRESHOLDS.get(key)
@@ -129,17 +142,25 @@ def index():
                 recs[key] = RECOMMENDATIONS.get(key, {}).get('low')
             elif val > high:
                 recs[key] = RECOMMENDATIONS.get(key, {}).get('high')
+
         return render_template('dashboard.html', ratios=ratios, colors=colors, recs=recs)
+
     return render_template('index.html')
 
 
 @app.route('/download', methods=['POST'])
 def download_pdf():
-    from flask import render_template_string
     import pdfkit
-
     data = request.form.to_dict(flat=False)
-    ratios = {k: float(v[0]) if v else None for k, v in data.items() if k.startswith('ratio_')}
+
+    def safe_float(val):
+        try:
+            return float(val[0]) if val and val[0] not in ["", "None", None] else None
+        except:
+            return None
+
+    ratios = {k: safe_float(v) for k, v in data.items() if k.startswith('ratio_')}
+
     html = render_template('pdf.html', ratios=ratios)
     pdf = pdfkit.from_string(html, False)
     return send_file(

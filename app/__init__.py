@@ -7,3 +7,4 @@ template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "te
 app = Flask(__name__, template_folder=template_dir)
 
 from . import routes
+

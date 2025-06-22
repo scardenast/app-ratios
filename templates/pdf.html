@@ -1,24 +1,28 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<title>Resumen Financiero</title>
-<style>
-body { font-family: sans-serif; }
-table { border-collapse: collapse; width: 100%; }
-th, td { border: 1px solid #333; padding: 4px; text-align: left; }
-</style>
+  <meta charset="utf-8">
+  <title>Resumen Financiero</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; margin: 40px; }
+    h1 { font-size: 20px; margin-bottom: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #333; padding: 6px 10px; text-align: left; }
+    th { background-color: #f0f0f0; }
+    .na { color: #999; font-style: italic; }
+    .title-cell { text-transform: capitalize; }
+  </style>
 </head>
 <body>
-<h1>Resumen de Ratios</h1>
-<table>
-<tr><th>Ratio</th><th>Valor</th></tr>
-{% for key, val in ratios.items() %}
-<tr>
-    <td>{{ key.replace('_', ' ') }}</td>
-    <td>{{ '%.2f'|format(val) if val is not none else 'N/A' }}</td>
-</tr>
-{% endfor %}
-</table>
+  <h1>Resumen de Ratios Financieros</h1>
+  <table>
+    <tr><th>Ratio</th><th>Valor</th></tr>
+    {% for key, val in ratios.items() %}
+    <tr>
+        <td class="title-cell">{{ key.replace('_', ' ') }}</td>
+        <td>{{ '%.2f'|format(val) if val is not none else '<span class="na">No disponible</span>' | safe }}</td>
+    </tr>
+    {% endfor %}
+  </table>
 </body>
 </html>
